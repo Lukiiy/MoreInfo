@@ -14,7 +14,7 @@ public partial class Plugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log { get; private set; } = null!;
 
-    private GameObject root;
+    private GameObject root = null!;
     private TextHud biomeHud = null!;
     private bool dumped = false;
 
