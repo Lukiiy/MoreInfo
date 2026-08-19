@@ -14,9 +14,9 @@ public partial class Plugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log { get; private set; } = null!;
 
-    private TextMeshProUGUI text;
     private GameObject root;
-    private bool dumped;
+    private TextHud biomeHud = null!;
+    private bool dumped = false;
 
     private static readonly Dictionary<Biome.BiomeType, string> BiomeNames = new()
     {
@@ -44,24 +44,13 @@ public partial class Plugin : BaseUnityPlugin
 
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 500;
-
         root.AddComponent<CanvasScaler>().referenceResolution = new Vector2(1920, 1080);
-
-        var textObj = new GameObject("biomedisplaytext");
-
-        textObj.transform.SetParent(root.transform, false);
-
-        text = textObj.AddComponent<TextMeshProUGUI>();
-        text.alignment = TextAlignmentOptions.BottomLeft;
-        text.fontSize = 28;
-
-        var textRect = text.rectTransform;
-
-        textRect.anchorMin = textRect.anchorMax = textRect.pivot = Vector2.zero;
-        textRect.anchoredPosition = new Vector2(28, 28);
-        textRect.sizeDelta = new Vector2(700, 160);
-
         root.SetActive(false);
+
+        biomeHud = new TextHud(root.transform, "Biomes", new Vector2(1, 1), new Vector2(-28, -28), new Vector2(700, 160));
+
+        biomeHud.Text.alignment = TextAlignmentOptions.TopRight;
+        biomeHud.SetActive(true);
     }
 
     private void Update()
@@ -69,24 +58,20 @@ public partial class Plugin : BaseUnityPlugin
         bool inLobby = GameUtils.instance != null && GameUtils.instance.m_inAirport;
 
         root.SetActive(inLobby);
-        if (!inLobby || dumped) return;
 
-        PlayerConnectionLog fontGrabberTargetlol = FindAnyObjectByType<PlayerConnectionLog>();
-        if (fontGrabberTargetlol != null && fontGrabberTargetlol.text != null) text.font = fontGrabberTargetlol.text.font;
+        if (inLobby && !dumped)
+        {
+            NextLevelService service = GameHandler.GetService<NextLevelService>();
+            if (service?.Data.IsSome != true) return;
 
-        var baker = SingletonAsset<MapBaker>.Instance;
-        var service = GameHandler.GetService<NextLevelService>();
+            MapBaker baker = SingletonAsset<MapBaker>.Instance;
+            MapBaker.BiomeResult? result = baker.selectedBiomes[service.Data.Value.CurrentLevelIndex % baker.selectedBiomes.Count];
+            List<string> labels = [];
 
-        if (service?.Data.IsSome != true) return;
+            foreach (var type in result?.biomeTypes ?? []) if (BiomeNames.TryGetValue(type, out var name)) labels.Add(name);
 
-        int index = service.Data.Value.CurrentLevelIndex;
-        var result = baker.selectedBiomes[index % baker.selectedBiomes.Count];
-
-        List<string> labels = [];
-
-        foreach (Biome.BiomeType type in result.biomeTypes) if (BiomeNames.TryGetValue(type, out var name)) labels.Add(name);
-
-        text.text = string.Join(", ", labels);
-        dumped = true;
+            biomeHud.SetText(string.Join(", ", labels));
+            dumped = true;
+        }
     }
 }
