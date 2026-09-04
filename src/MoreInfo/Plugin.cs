@@ -13,6 +13,7 @@ namespace MoreInfo;
 public partial class Plugin : BaseUnityPlugin
 {
     internal static ManualLogSource Log { get; private set; } = null!;
+    public static Plugin Instance { get; private set; } = null!;
 
     private GameObject root = null!;
     private TextHud biomeHud = null!;
@@ -31,6 +32,7 @@ public partial class Plugin : BaseUnityPlugin
     private void Awake()
     {
         Log = Logger;
+        Instance = this;
 
         Harmony harmony = new(Info.Metadata.GUID);
 
