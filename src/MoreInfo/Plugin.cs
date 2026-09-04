@@ -2,10 +2,10 @@ using System.Collections.Generic;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using TMPro;
+using MoreInfo.provided;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Zorro.Core;
 
 namespace MoreInfo;
 
@@ -16,8 +16,8 @@ public partial class Plugin : BaseUnityPlugin
     public static Plugin Instance { get; private set; } = null!;
 
     private GameObject root = null!;
-    private TextHud biomeHud = null!;
-    private bool dumped = false;
+    private Lobby lobbyHud = null!;
+    private Run runHud = null!;
 
     private static readonly Dictionary<Biome.BiomeType, string> BiomeNames = new()
     {
@@ -47,33 +47,41 @@ public partial class Plugin : BaseUnityPlugin
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 500;
         root.AddComponent<CanvasScaler>().referenceResolution = new Vector2(1920, 1080);
-        root.SetActive(false);
 
-        biomeHud = new TextHud(root.transform, "Biomes", new Vector2(1, 1), new Vector2(-28, -28), new Vector2(700, 160));
+        lobbyHud = new Lobby(root.transform);
+        runHud = new Run(root.transform);
 
-        biomeHud.Text.alignment = TextAlignmentOptions.TopRight;
-        biomeHud.SetActive(true);
+        lobbyHud.SetActive(false);
+        runHud.SetActive(false);
+    }
+
+    private void OnEnable() => SceneManager.sceneLoaded += SceneLoaded;
+    private void OnDisable() => SceneManager.sceneLoaded -= SceneLoaded;
+
+    private void SceneLoaded(Scene scene, LoadSceneMode mode) => StartCoroutine(InitializeHud());
+
+    private IEnumerator<object?> InitializeHud()
+    {
+        yield return null;
+
+        bool lobby = GameUtils.instance?.m_inAirport == true;
+
+        lobbyHud.SetActive(lobby);
+        if (lobby) lobbyHud.Update();
     }
 
     private void Update()
     {
-        bool inLobby = GameUtils.instance != null && GameUtils.instance.m_inAirport;
+        if (runHud.IsActive) runHud.Update();
+    }
 
-        root.SetActive(inLobby);
-
-        if (inLobby && !dumped)
+    [HarmonyPatch(typeof(MapHandler), "InitializeMap")]
+    internal static class RunStartedPatch
+    {
+        public static void Postfix()
         {
-            NextLevelService service = GameHandler.GetService<NextLevelService>();
-            if (service?.Data.IsSome != true) return;
-
-            MapBaker baker = SingletonAsset<MapBaker>.Instance;
-            MapBaker.BiomeResult? result = baker.selectedBiomes[service.Data.Value.CurrentLevelIndex % baker.selectedBiomes.Count];
-            List<string> labels = [];
-
-            foreach (var type in result?.biomeTypes ?? []) if (BiomeNames.TryGetValue(type, out var name)) labels.Add(name);
-
-            biomeHud.SetText(string.Join(", ", labels));
-            dumped = true;
+            Instance.lobbyHud.Hide();
+            Instance.runHud.Show();
         }
     }
 }
