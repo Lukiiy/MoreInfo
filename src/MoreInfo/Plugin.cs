@@ -84,4 +84,16 @@ public partial class Plugin : BaseUnityPlugin
             Instance.runHud.Show();
         }
     }
+
+    [HarmonyPatch(typeof(MapHandler), "OnDestroy")]
+    internal static class RunEndedPatch
+    {
+        public static void Postfix() => Instance.runHud.Hide();
+    }
+
+    [HarmonyPatch(typeof(MainMenu), "Start")]
+    internal static class TitlePatch
+    {
+        public static void Postfix() => Instance.lobbyHud.Hide();
+    }
 }
