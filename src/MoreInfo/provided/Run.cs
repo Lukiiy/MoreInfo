@@ -54,7 +54,10 @@ public sealed class Run
         Character player = Character.localCharacter;
         if (player == null) return;
 
-        float total = Vector3.Distance(start, MapHandler.GetCampfireRoot(segment + 1).transform.position);
+        GameObject? next = MapHandler.GetCampfireRoot(segment + 1);
+        if (next == null) return;
+
+        float total = Vector3.Distance(start, next.transform.position);
         if (total <= 0f) return;
 
         float travelled = Vector3.Distance(start, player.Center);
