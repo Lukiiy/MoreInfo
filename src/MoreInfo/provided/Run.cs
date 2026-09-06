@@ -58,7 +58,7 @@ public sealed class Run
         if (total <= 0f) return;
 
         float travelled = Vector3.Distance(start, player.Center);
-        float progress = Mathf.Clamp01(travelled / total) * 100f;
+        float progress = (1f - Mathf.Clamp01(travelled / total)) * 100f;
 
         lines.Add($"{progress:F0}%");
     }
