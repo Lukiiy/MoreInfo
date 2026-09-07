@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using System.Linq;
 
 namespace MoreInfo;
 
@@ -25,13 +26,10 @@ public sealed class TextHud
         rect.pivot = anchor;
         rect.anchoredPosition = position;
         rect.sizeDelta = size;
+
+        Text.font = Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault(it => it.name == "DarumaDropOne-Regular SDF") ?? Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault();
     }
 
-    public void SetText(string value)
-    {
-        Text.text = value;
-        Text.font = UnityEngine.Object.FindAnyObjectByType<PlayerConnectionLog>()?.text?.font;
-    }
-
+    public void SetText(string value) => Text.text = value;
     public void SetActive(bool active) => Object.SetActive(active);
 }
