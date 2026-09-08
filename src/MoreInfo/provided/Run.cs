@@ -50,7 +50,11 @@ public sealed class Run
         int segment = (int) MapHandler.CurrentSegmentNumber;
         if (segment + 1 >= MapHandler.Instance.segments.Length) return;
 
+        GameObject? before = MapHandler.GetCampfireRoot(segment);
+        if (before == null) return;
+
         Vector3 start = MapHandler.GetCampfireRoot(segment).transform.position;
+
         Character player = Character.localCharacter;
         if (player == null) return;
 
