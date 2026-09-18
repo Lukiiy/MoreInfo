@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using System.Linq;
+using System;
 
 namespace MoreInfo;
 
@@ -27,7 +28,7 @@ public sealed class TextHud
         rect.anchoredPosition = position;
         rect.sizeDelta = size;
 
-        Text.font = Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault(it => it.name == "DarumaDropOne-Regular SDF") ?? Resources.FindObjectsOfTypeAll<TMP_FontAsset>().FirstOrDefault();
+        Text.font = FontFallbackSwapper.instance.mainBaseFont;
     }
 
     public void SetText(string value) => Text.text = value;
