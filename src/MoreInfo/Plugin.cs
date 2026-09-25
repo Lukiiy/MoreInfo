@@ -15,9 +15,10 @@ public partial class Plugin : BaseUnityPlugin
     internal static ManualLogSource Log { get; private set; } = null!;
     public static Plugin Instance { get; private set; } = null!;
 
+    public static Lobby LobbyHud { get; private set; } = null!;
+    public static Run RunHud { get; private set; } = null!;
+
     private GameObject root = null!;
-    private Lobby lobbyHud = null!;
-    private Run runHud = null!;
 
     private static readonly Dictionary<Biome.BiomeType, string> BiomeNames = new()
     {
@@ -47,53 +48,19 @@ public partial class Plugin : BaseUnityPlugin
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 500;
         root.AddComponent<CanvasScaler>().referenceResolution = new Vector2(1920, 1080);
-
-        lobbyHud = new Lobby(root.transform);
-        runHud = new Run(root.transform);
-
-        lobbyHud.SetActive(false);
-        runHud.SetActive(false);
     }
 
     private void OnEnable() => SceneManager.sceneLoaded += SceneLoaded;
     private void OnDisable() => SceneManager.sceneLoaded -= SceneLoaded;
-
     private void SceneLoaded(Scene scene, LoadSceneMode mode) => StartCoroutine(InitializeHud());
 
     private IEnumerator<object?> InitializeHud()
     {
         yield return null;
 
-        bool lobby = GameUtils.instance?.m_inAirport == true;
+        LobbyHud ??= new Lobby(root.transform);
+        RunHud ??= new Run(root.transform);
 
-        lobbyHud.SetActive(lobby);
-        if (lobby) lobbyHud.Update();
-    }
-
-    private void Update()
-    {
-        if (runHud.IsActive) runHud.Update();
-    }
-
-    [HarmonyPatch(typeof(MapHandler), "InitializeMap")]
-    internal static class RunStartedPatch
-    {
-        public static void Postfix()
-        {
-            Instance.lobbyHud.Hide();
-            Instance.runHud.Show();
-        }
-    }
-
-    [HarmonyPatch(typeof(MapHandler), "OnDestroy")]
-    internal static class RunEndedPatch
-    {
-        public static void Postfix() => Instance.runHud.Hide();
-    }
-
-    [HarmonyPatch(typeof(MainMenu), "Start")]
-    internal static class TitlePatch
-    {
-        public static void Postfix() => Instance.lobbyHud.Hide();
+        if (GameUtils.instance?.m_inAirport == true) LobbyHud?.Show();
     }
 }
