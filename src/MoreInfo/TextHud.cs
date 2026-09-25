@@ -1,7 +1,5 @@
 using TMPro;
 using UnityEngine;
-using System.Linq;
-using System;
 
 namespace MoreInfo;
 
@@ -29,6 +27,9 @@ public sealed class TextHud
         rect.sizeDelta = size;
 
         Text.font = FontFallbackSwapper.instance.mainBaseFont;
+        Text.fontMaterial = FontFallbackSwapper.instance.mainBaseFont.material;
+
+        SetActive(false);
     }
 
     public void SetText(string value) => Text.text = value;
